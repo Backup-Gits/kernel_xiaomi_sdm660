@@ -589,10 +589,37 @@ afunc_bind(struct usb_configuration *cfg, struct usb_function *fn)
 		return -ENODEV;
 	}
 
-	agdev->in_ep_maxpsize = max(fs_epin_desc.wMaxPacketSize,
-					hs_epin_desc.wMaxPacketSize);
-	agdev->out_ep_maxpsize = max(fs_epout_desc.wMaxPacketSize,
-					hs_epout_desc.wMaxPacketSize);
+	uac2->p_prm.uac2 = uac2;
+	uac2->c_prm.uac2 = uac2;
+
+	/* Calculate wMaxPacketSize according to audio bandwidth */
+	ret = set_ep_max_packet_size(uac2_opts, &fs_epin_desc, USB_SPEED_FULL,
+				     true);
+	if (ret < 0) {
+		dev_err(dev, "%s:%d Error!\n", __func__, __LINE__);
+		return ret;
+	}
+
+	ret = set_ep_max_packet_size(uac2_opts, &fs_epout_desc, USB_SPEED_FULL,
+				     false);
+	if (ret < 0) {
+		dev_err(dev, "%s:%d Error!\n", __func__, __LINE__);
+		return ret;
+	}
+
+	ret = set_ep_max_packet_size(uac2_opts, &hs_epin_desc, USB_SPEED_HIGH,
+				     true);
+	if (ret < 0) {
+		dev_err(dev, "%s:%d Error!\n", __func__, __LINE__);
+		return ret;
+	}
+
+	ret = set_ep_max_packet_size(uac2_opts, &hs_epout_desc, USB_SPEED_HIGH,
+				     false);
+	if (ret < 0) {
+		dev_err(dev, "%s:%d Error!\n", __func__, __LINE__);
+		return ret;
+	}
 
 	hs_epout_desc.bEndpointAddress = fs_epout_desc.bEndpointAddress;
 	hs_epin_desc.bEndpointAddress = fs_epin_desc.bEndpointAddress;
